@@ -69,4 +69,12 @@ impl Hittable for Sphere {
             Arc::clone(&self.material),
         ))
     }
+
+    fn bounding_box(&self) -> Option<crate::aabb::AABB> {
+        let radius_vec = Vec3::new(self.radius, self.radius, self.radius);
+        Some(crate::aabb::AABB::new(
+            self.center - radius_vec,
+            self.center + radius_vec,
+        ))
+    }
 }

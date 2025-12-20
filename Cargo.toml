@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 rand = "0.9.2"
+rayon = "1.8"
+winit = "0.30"
+pixels = "0.15"

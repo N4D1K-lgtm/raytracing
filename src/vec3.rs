@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 {
@@ -51,6 +51,11 @@ impl Vec3 {
                 z: self.z / len,
             })
         }
+    }
+
+    /// Normalize the vector (panics if zero length)
+    pub fn normalized(self) -> Vec3 {
+        self.normalize().expect("Cannot normalize zero-length vector")
     }
 
     /// Generate a random vector with components in range [0, 1)
@@ -202,6 +207,19 @@ impl Neg for Vec3 {
             x: -self.x,
             y: -self.y,
             z: -self.z,
+        }
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &f64 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bounds for Vec3"),
         }
     }
 }
