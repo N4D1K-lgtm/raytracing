@@ -3,6 +3,12 @@ pub mod core;
 pub mod geometry;
 pub mod acceleration;
 
+// New modules (Phase 2)
+pub mod scene_graph;
+pub mod materials;
+pub mod textures;
+pub mod lights;
+
 // Existing modules
 pub mod aabb;
 pub mod accumulator;

@@ -6,7 +6,6 @@
 /// - UV mapping and tangent vectors
 /// - New BVH acceleration structure
 /// - Intersection records with full surface data
-
 use raytracing::acceleration::build_bvh;
 use raytracing::camera::Camera;
 use raytracing::core::math::{Transform, Vec2};
@@ -58,8 +57,8 @@ fn main() {
 
     // 3. Box on the left (transformed: translated and scaled)
     println!("  ✓ Left box (transformed)");
-    let box_transform = Transform::translate(Vec3::new(-1.5, 0.0, 0.0))
-        .then(&Transform::scale_uniform(0.5));
+    let box_transform =
+        Transform::translate(Vec3::new(-1.5, 0.0, 0.0)).then(&Transform::scale_uniform(0.5));
     primitives.push(Arc::new(TransformedPrimitive::new(
         Box::new(Box3::unit_cube(green_material.clone())),
         box_transform,
@@ -104,10 +103,10 @@ fn main() {
 
     // Camera setup
     let _camera = Camera::new_look_at(
-        Vec3::new(3.0, 2.0, 3.0),    // Eye position
-        Vec3::new(0.0, 0.0, 0.0),    // Look at center
-        Vec3::new(0.0, 1.0, 0.0),    // Up vector
-        40.0,                         // Vertical FOV
+        Vec3::new(3.0, 2.0, 3.0), // Eye position
+        Vec3::new(0.0, 0.0, 0.0), // Look at center
+        Vec3::new(0.0, 1.0, 0.0), // Up vector
+        40.0,                     // Vertical FOV
         aspect_ratio,
     );
 
