@@ -35,7 +35,9 @@ impl Mat4 {
 
     /// Create matrix from columns
     pub const fn from_cols(c0: [f64; 4], c1: [f64; 4], c2: [f64; 4], c3: [f64; 4]) -> Self {
-        Mat4 { m: [c0, c1, c2, c3] }
+        Mat4 {
+            m: [c0, c1, c2, c3],
+        }
     }
 
     /// Create translation matrix
@@ -319,7 +321,6 @@ mod tests {
         let inv = m.inverse().unwrap();
         let result = m * inv;
 
-        // Should be close to identity
         for i in 0..4 {
             for j in 0..4 {
                 let expected = if i == j { 1.0 } else { 0.0 };

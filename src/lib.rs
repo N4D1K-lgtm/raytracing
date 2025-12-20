@@ -1,6 +1,7 @@
 // New modules (Phase 1)
 pub mod core;
 pub mod geometry;
+pub mod acceleration;
 
 // Existing modules
 pub mod aabb;

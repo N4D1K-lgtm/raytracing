@@ -1,7 +1,7 @@
-use crate::vec3::Vec3;
 use crate::core::math::Vec2;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::vec3::Vec3;
 use std::sync::Arc;
 
 /// Intersection record containing all information about a ray-surface intersection
