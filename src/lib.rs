@@ -1,3 +1,8 @@
+// New modules (Phase 1)
+pub mod core;
+pub mod geometry;
+
+// Existing modules
 pub mod aabb;
 pub mod accumulator;
 pub mod app;

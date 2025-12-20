@@ -6,8 +6,8 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::window::{Window, WindowId};
 
-const WIDTH: u32 = 1080;
-const HEIGHT: u32 = 1920;
+const WIDTH: u32 = 540;
+const HEIGHT: u32 = 360;
 
 struct AppState {
     window: Option<Arc<Window>>,
@@ -32,18 +32,20 @@ impl ApplicationHandler for AppState {
             self.window = Some(arc_window);
         }
 
-        if self.pixels.is_none() {
-            if let Some(window) = &self.window {
-                let window_size = window.inner_size();
-                // Leak the Arc to get a 'static reference for pixels
-                let window_ref: &'static Window = Box::leak(Box::new(Arc::clone(window)));
-                let surface_texture =
-                    pixels::SurfaceTexture::new(window_size.width, window_size.height, window_ref);
-                let pixels = pixels::PixelsBuilder::new(WIDTH, HEIGHT, surface_texture)
-                    .build()
-                    .expect("Failed to create pixels buffer");
-                self.pixels = Some(pixels);
-            }
+        if self.pixels.is_some() {
+            return;
+        }
+
+        if let Some(window) = &self.window {
+            let window_size = window.inner_size();
+            // Leak the Arc to get a 'static reference for pixels
+            let window_ref: &'static Window = Box::leak(Box::new(Arc::clone(window)));
+            let surface_texture =
+                pixels::SurfaceTexture::new(window_size.width, window_size.height, window_ref);
+            let pixels = pixels::PixelsBuilder::new(WIDTH, HEIGHT, surface_texture)
+                .build()
+                .expect("Failed to create pixels buffer");
+            self.pixels = Some(pixels);
         }
     }
 
