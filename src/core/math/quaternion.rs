@@ -1,5 +1,5 @@
-use crate::vec3::Vec3;
 use super::Mat4;
+use crate::vec3::Vec3;
 use std::ops::Mul;
 
 /// Quaternion for representing rotations

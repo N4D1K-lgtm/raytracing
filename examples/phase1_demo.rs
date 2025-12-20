@@ -51,7 +51,7 @@ fn main() {
     // 2. Sphere in center (with transform for positioning)
     println!("  ✓ Center sphere (transformed)");
     primitives.push(Arc::new(TransformedPrimitive::new(
-        Box::new(Sphere::new(0.5, red_material.clone())),
+        Arc::new(Sphere::new(0.5, red_material.clone())),
         Transform::translate(Vec3::new(0.0, 0.0, 0.0)),
     )));
 
@@ -60,14 +60,14 @@ fn main() {
     let box_transform =
         Transform::translate(Vec3::new(-1.5, 0.0, 0.0)).then(&Transform::scale_uniform(0.5));
     primitives.push(Arc::new(TransformedPrimitive::new(
-        Box::new(Box3::unit_cube(green_material.clone())),
+        Arc::new(Box3::unit_cube(green_material.clone())),
         box_transform,
     )));
 
     // 4. Rectangle on the right (standing vertical)
     println!("  ✓ Right rectangle");
     primitives.push(Arc::new(TransformedPrimitive::new(
-        Box::new(Rect::new(
+        Arc::new(Rect::new(
             RectAxis::XY,
             Vec2::new(-0.4, -0.4),
             Vec2::new(0.4, 0.4),
@@ -80,7 +80,7 @@ fn main() {
     // 5. Metallic sphere in back
     println!("  ✓ Back metallic sphere (transformed)");
     primitives.push(Arc::new(TransformedPrimitive::new(
-        Box::new(Sphere::new(0.3, metal_material.clone())),
+        Arc::new(Sphere::new(0.3, metal_material.clone())),
         Transform::translate(Vec3::new(0.0, 0.0, -2.0)),
     )));
 
@@ -92,7 +92,7 @@ fn main() {
             .then(&Transform::scale_uniform(0.2));
 
         primitives.push(Arc::new(TransformedPrimitive::new(
-            Box::new(Box3::unit_cube(red_material.clone())),
+            Arc::new(Box3::unit_cube(red_material.clone())),
             transform,
         )));
     }

@@ -1,5 +1,5 @@
 use crate::core::intersection::Intersection;
-use crate::core::math::{Vec2, AABB};
+use crate::core::math::{AABB, Vec2};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
@@ -221,11 +221,7 @@ mod tests {
         let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // Box with dimensions 2x3x4
-        let box3 = Box3::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(2.0, 3.0, 4.0),
-            material,
-        );
+        let box3 = Box3::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(2.0, 3.0, 4.0), material);
 
         // Surface area = 2*(2*3 + 3*4 + 4*2) = 2*(6 + 12 + 8) = 52
         assert!((box3.surface_area() - 52.0).abs() < 1e-6);

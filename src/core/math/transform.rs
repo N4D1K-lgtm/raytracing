@@ -1,7 +1,7 @@
-use super::{Mat4, Quaternion};
-use crate::vec3::Vec3;
-use crate::ray::Ray;
 use super::bounds::AABB;
+use super::{Mat4, Quaternion};
+use crate::ray::Ray;
+use crate::vec3::Vec3;
 
 /// Transform represents a spatial transformation with cached inverse
 #[derive(Clone, Debug)]

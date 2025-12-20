@@ -1,11 +1,11 @@
-mod primitive;
-mod sphere;
-mod plane;
-mod rect;
 mod box_primitive;
+mod plane;
+mod primitive;
+mod rect;
+mod sphere;
 
-pub use primitive::*;
-pub use sphere::Sphere;
-pub use plane::Plane;
-pub use rect::{Rect, RectAxis};
 pub use box_primitive::Box3;
+pub use plane::Plane;
+pub use primitive::*;
+pub use rect::{Rect, RectAxis};
+pub use sphere::Sphere;

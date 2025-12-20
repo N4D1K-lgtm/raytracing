@@ -1,5 +1,5 @@
 use crate::core::intersection::Intersection;
-use crate::core::math::{Vec2, AABB};
+use crate::core::math::{AABB, Vec2};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;

@@ -1,5 +1,5 @@
-mod scene_node;
 mod instance;
+mod scene_node;
 
-pub use scene_node::{SceneNode, NodeId, NodeContent};
 pub use instance::Instance;
+pub use scene_node::{NodeContent, NodeId, SceneNode};

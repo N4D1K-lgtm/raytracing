@@ -1,5 +1,5 @@
 use crate::core::intersection::Intersection;
-use crate::core::math::{Vec2, AABB};
+use crate::core::math::{AABB, Vec2};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
@@ -108,10 +108,7 @@ impl Primitive for Plane {
         // Infinite plane has infinite bounds
         // Return a very large bounding box
         let big = 1e10;
-        AABB::new(
-            Vec3::new(-big, -big, -big),
-            Vec3::new(big, big, big),
-        )
+        AABB::new(Vec3::new(-big, -big, -big), Vec3::new(big, big, big))
     }
 
     fn surface_area(&self) -> f64 {
@@ -130,11 +127,7 @@ mod tests {
         let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
-        let plane = Plane::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 1.0),
-            material,
-        );
+        let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);
 
         // Ray pointing at plane from above
         let ray = Ray::new(Vec3::new(0.0, 0.0, 5.0), Vec3::new(0.0, 0.0, -1.0));
@@ -151,11 +144,7 @@ mod tests {
         let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
-        let plane = Plane::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 1.0),
-            material,
-        );
+        let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);
 
         // Ray parallel to plane
         let ray = Ray::new(Vec3::new(0.0, 0.0, 5.0), Vec3::new(1.0, 0.0, 0.0));
@@ -169,11 +158,7 @@ mod tests {
         let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
-        let plane = Plane::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, 1.0),
-            material,
-        );
+        let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);
 
         // Ray from above (hitting front face)
         let ray = Ray::new(Vec3::new(0.0, 0.0, 5.0), Vec3::new(0.0, 0.0, -1.0));

@@ -81,7 +81,10 @@ impl SceneNode {
         material: Arc<dyn Material>,
     ) -> Self {
         let mut node = Self::new(id, name);
-        node.content = NodeContent::Geometry { primitive, material };
+        node.content = NodeContent::Geometry {
+            primitive,
+            material,
+        };
         node
     }
 

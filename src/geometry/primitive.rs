@@ -59,13 +59,13 @@ pub trait Primitive: Send + Sync {
 
 /// Wrapper that applies a transform to a primitive
 pub struct TransformedPrimitive {
-    primitive: Box<dyn Primitive>,
+    primitive: std::sync::Arc<dyn Primitive>,
     object_to_world: crate::core::math::Transform,
     world_to_object: crate::core::math::Transform,
 }
 
 impl TransformedPrimitive {
-    pub fn new(primitive: Box<dyn Primitive>, transform: crate::core::math::Transform) -> Self {
+    pub fn new(primitive: std::sync::Arc<dyn Primitive>, transform: crate::core::math::Transform) -> Self {
         let world_to_object = transform.inverse();
         TransformedPrimitive {
             primitive,
@@ -131,7 +131,10 @@ impl Primitive for TransformedPrimitive {
     fn pdf(&self, origin: Vec3, direction: Vec3) -> f64 {
         // Transform to object space
         let object_origin = self.world_to_object.transform_point(origin);
-        let object_direction = self.world_to_object.transform_vector(direction).normalized();
+        let object_direction = self
+            .world_to_object
+            .transform_vector(direction)
+            .normalized();
         self.primitive.pdf(object_origin, object_direction)
     }
 }
@@ -160,8 +163,9 @@ mod tests {
     #[test]
     fn test_transformed_bounds() {
         use crate::core::math::Transform;
+        use std::sync::Arc;
 
-        let sphere = Box::new(TestSphere {
+        let sphere = Arc::new(TestSphere {
             center: Vec3::ZERO,
             radius: 1.0,
         });

@@ -124,8 +124,16 @@ impl AABB {
     /// Merge this AABB with a point
     pub fn merge_point(&self, p: Vec3) -> AABB {
         AABB::new(
-            Vec3::new(self.min.x.min(p.x), self.min.y.min(p.y), self.min.z.min(p.z)),
-            Vec3::new(self.max.x.max(p.x), self.max.y.max(p.y), self.max.z.max(p.z)),
+            Vec3::new(
+                self.min.x.min(p.x),
+                self.min.y.min(p.y),
+                self.min.z.min(p.z),
+            ),
+            Vec3::new(
+                self.max.x.max(p.x),
+                self.max.y.max(p.y),
+                self.max.z.max(p.z),
+            ),
         )
     }
 

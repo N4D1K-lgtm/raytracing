@@ -1,5 +1,5 @@
 use crate::core::intersection::Intersection;
-use crate::core::math::{Vec2, AABB};
+use crate::core::math::{AABB, Vec2};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
@@ -50,13 +50,7 @@ impl Rect {
     ///     material
     /// );
     /// ```
-    pub fn new(
-        axis: RectAxis,
-        min: Vec2,
-        max: Vec2,
-        k: f64,
-        material: Arc<dyn Material>,
-    ) -> Self {
+    pub fn new(axis: RectAxis, min: Vec2, max: Vec2, k: f64, material: Arc<dyn Material>) -> Self {
         Rect {
             axis,
             min,

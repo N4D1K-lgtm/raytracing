@@ -174,15 +174,15 @@ mod tests {
 
         let spheres: Vec<Arc<dyn Primitive>> = vec![
             Arc::new(TransformedPrimitive::new(
-                Box::new(Sphere::new(1.0, Arc::clone(&material))),
+                Arc::new(Sphere::new(1.0, Arc::clone(&material))),
                 Transform::translate(Vec3::new(-3.0, 0.0, 0.0)),
             )),
             Arc::new(TransformedPrimitive::new(
-                Box::new(Sphere::new(1.0, Arc::clone(&material))),
+                Arc::new(Sphere::new(1.0, Arc::clone(&material))),
                 Transform::translate(Vec3::new(0.0, 0.0, 0.0)),
             )),
             Arc::new(TransformedPrimitive::new(
-                Box::new(Sphere::new(1.0, Arc::clone(&material))),
+                Arc::new(Sphere::new(1.0, Arc::clone(&material))),
                 Transform::translate(Vec3::new(3.0, 0.0, 0.0)),
             )),
         ];

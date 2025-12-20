@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Neg};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 /// 2D vector for UV coordinates and other 2D operations
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -36,11 +36,7 @@ impl Vec2 {
     #[inline]
     pub fn normalized(&self) -> Vec2 {
         let len = self.length();
-        if len > 0.0 {
-            *self / len
-        } else {
-            Vec2::ZERO
-        }
+        if len > 0.0 { *self / len } else { Vec2::ZERO }
     }
 
     #[inline]
@@ -55,10 +51,7 @@ impl Vec2 {
 
     #[inline]
     pub fn clamp(&self, min: Vec2, max: Vec2) -> Vec2 {
-        Vec2::new(
-            self.x.clamp(min.x, max.x),
-            self.y.clamp(min.y, max.y),
-        )
+        Vec2::new(self.x.clamp(min.x, max.x), self.y.clamp(min.y, max.y))
     }
 
     #[inline]
