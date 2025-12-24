@@ -1,5 +1,4 @@
 use crate::camera::Camera;
-use crate::hit::Hittable;
 use crate::image::Image;
 use crate::ray::Ray;
 use crate::scene::Scene;
@@ -175,26 +174,188 @@ impl Renderer {
         buffer
     }
 
+    /// Power heuristic for Multiple Importance Sampling (MIS)
+    /// Uses β=2 (balance heuristic) which is optimal for most cases
+    fn power_heuristic(pdf_a: f64, pdf_b: f64) -> f64 {
+        if pdf_a == 0.0 {
+            return 0.0;
+        }
+        if pdf_b == 0.0 {
+            return 1.0;
+        }
+        let a2 = pdf_a * pdf_a;
+        let b2 = pdf_b * pdf_b;
+        a2 / (a2 + b2)
+    }
+
     fn ray_color(&self, ray: &Ray, world: &Scene, depth: i32) -> Vec3 {
+        // Russian Roulette path termination for unbiased rendering
+        const MIN_DEPTH: i32 = 3;  // Always trace first 3 bounces
+        const RR_SURVIVAL_PROB: f64 = 0.85;  // 85% survival probability after min depth
+
         // If we've exceeded the ray bounce limit, no more light is gathered
         if depth <= 0 {
             return Vec3::ZERO;
         }
 
-        // Check if ray hits anything
-        if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
-            // Try to scatter the ray off the material
-            if let Some((attenuation, scattered)) = hit.material.scatter(ray, &hit) {
-                // Recursively trace the scattered ray
-                return attenuation * self.ray_color(&scattered, world, depth - 1);
+        // Russian Roulette: probabilistically terminate paths after min depth
+        // depth counts down: max_depth -> 0, so (max_depth - depth) is number of bounces taken
+        let bounces_taken = self.max_depth - depth;
+
+        if bounces_taken >= MIN_DEPTH {
+            let mut rng = rand::rng();
+            if rng.random::<f64>() > RR_SURVIVAL_PROB {
+                return Vec3::ZERO; // Terminate path
             }
-            // Ray was absorbed
-            return Vec3::ZERO;
+            // Note: We don't divide by survival prob here - we'll do it in the contribution below
+        }
+
+        // Check if ray hits anything using new scene graph API
+        if let Some(isect) = world.intersect(ray, 0.001, f64::INFINITY) {
+            // Add emitted light from surface
+            let mut color = isect.material.emitted(&isect);
+
+            // Russian Roulette compensation: divide by survival probability to remain unbiased
+            let rr_compensation = if bounces_taken >= MIN_DEPTH {
+                1.0 / RR_SURVIVAL_PROB
+            } else {
+                1.0
+            };
+
+            // Compute scattering at intersection point
+            let bxdf = isect.material.compute_scattering_functions(&isect);
+
+            // Transform ray direction to local shading space
+            // Local space has normal pointing along +Z
+            let wo_world = -ray.direction; // Direction towards viewer
+            let wo_local = Self::world_to_local(wo_world, &isect);
+
+            let mut rng = rand::rng();
+
+            // === DIRECT LIGHTING: Sample all lights ===
+            for light in world.lights() {
+                // Sample a point on the light
+                let light_u = crate::core::math::Vec2::new(rng.random::<f64>(), rng.random::<f64>());
+
+                if let Some(light_sample) = light.sample_li(isect.point, light_u) {
+                    // Transform light direction to local space
+                    let wi_local = Self::world_to_local(light_sample.wi, &isect);
+
+                    // Check if light is in correct hemisphere
+                    if wi_local.z <= 0.0 {
+                        continue;
+                    }
+
+                    // Cast shadow ray to check visibility
+                    let shadow_ray = Ray::new(isect.point, light_sample.wi);
+                    let blocked = world.intersect_p(&shadow_ray, 0.001, light_sample.distance - 0.001);
+
+                    if !blocked {
+                        // Evaluate BSDF for this direction
+                        let f = bxdf.f(wo_local, wi_local);
+                        let cos_theta = wi_local.z.abs();
+
+                        // Multiple Importance Sampling: weight light sample by BSDF PDF
+                        let mis_weight = if light.is_delta() {
+                            // Delta lights can't be importance sampled by BSDF, so weight = 1
+                            1.0
+                        } else {
+                            // Evaluate BSDF PDF for this direction and compute balance heuristic
+                            let bsdf_pdf = bxdf.pdf(wo_local, wi_local);
+                            Self::power_heuristic(light_sample.pdf, bsdf_pdf)
+                        };
+
+                        // Add direct lighting contribution with MIS weight
+                        if light_sample.pdf > 0.0 {
+                            color += mis_weight * f * light_sample.radiance * (cos_theta / light_sample.pdf);
+                        }
+                    }
+                }
+            }
+
+            // === INDIRECT LIGHTING: Sample BSDF for next bounce ===
+            let u = crate::core::math::Vec2::new(rng.random::<f64>(), rng.random::<f64>());
+
+            if let Some(sample) = bxdf.sample_f(wo_local, u) {
+                // Transform sampled direction back to world space
+                let wi_world = Self::local_to_world(sample.wi, &isect);
+
+                // Create scattered ray
+                let scattered = Ray::new(isect.point, wi_world);
+
+                // Compute rendering equation contribution for indirect lighting
+                let cos_theta = sample.wi.z.abs();
+
+                // Recursively trace scattered ray
+                let incoming_radiance = self.ray_color(&scattered, world, depth - 1);
+
+                // Multiple Importance Sampling: weight BSDF sample by light PDF if we hit a light
+                let mut mis_weight = 1.0;
+
+                // Check if we hit an emissive surface (light)
+                if incoming_radiance.length_squared() > 0.0 {
+                    if let Some(hit_isect) = world.intersect(&scattered, 0.001, f64::INFINITY) {
+                        let emitted = hit_isect.material.emitted(&hit_isect);
+
+                        // If we hit an emissive surface, evaluate light sampling PDF
+                        if emitted.length_squared() > 0.0 {
+                            // Compute average PDF of sampling this direction via lights
+                            let mut light_pdf = 0.0;
+                            let mut num_lights = 0;
+
+                            for light in world.lights() {
+                                // Skip delta lights - they can't be hit by random rays
+                                if !light.is_delta() {
+                                    light_pdf += light.pdf_li(isect.point, wi_world);
+                                    num_lights += 1;
+                                }
+                            }
+
+                            if num_lights > 0 {
+                                light_pdf /= num_lights as f64;
+                                // Apply MIS weight (BSDF sampling strategy)
+                                mis_weight = Self::power_heuristic(sample.pdf, light_pdf);
+                            }
+                        }
+                    }
+                }
+
+                // Add indirect light with MIS weight (f * L_i * cos_theta / pdf)
+                if sample.pdf > 0.0 {
+                    color += mis_weight * sample.f * incoming_radiance * (cos_theta / sample.pdf);
+                }
+            }
+
+            // Apply Russian Roulette compensation to final color
+            return color * rr_compensation;
         }
 
         // Sky gradient background (light source)
         let unit_direction = ray.direction;
         let t = 0.5 * (unit_direction.y + 1.0);
         (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
+    }
+
+    /// Transform a world-space direction to local shading space
+    /// Local space has: normal = +Z, tangent = +X, bitangent = +Y
+    fn world_to_local(world: Vec3, isect: &crate::core::intersection::Intersection) -> Vec3 {
+        let tangent = isect.tangent();
+        let bitangent = isect.bitangent();
+        let normal = isect.shading_normal();
+
+        Vec3::new(
+            world.dot(tangent),
+            world.dot(bitangent),
+            world.dot(normal),
+        )
+    }
+
+    /// Transform a local shading space direction to world space
+    fn local_to_world(local: Vec3, isect: &crate::core::intersection::Intersection) -> Vec3 {
+        let tangent = isect.tangent();
+        let bitangent = isect.bitangent();
+        let normal = isect.shading_normal();
+
+        tangent * local.x + bitangent * local.y + normal * local.z
     }
 }

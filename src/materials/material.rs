@@ -48,8 +48,12 @@ impl PbrMaterial {
 
         PbrMaterial {
             albedo: Arc::new(ConstantTexture::new(albedo)),
-            metallic: Arc::new(ConstantTexture::new(Vec3::new(metallic, metallic, metallic))),
-            roughness: Arc::new(ConstantTexture::new(Vec3::new(roughness, roughness, roughness))),
+            metallic: Arc::new(ConstantTexture::new(Vec3::new(
+                metallic, metallic, metallic,
+            ))),
+            roughness: Arc::new(ConstantTexture::new(Vec3::new(
+                roughness, roughness, roughness,
+            ))),
             ior: 1.5,
             emissive: None,
         }

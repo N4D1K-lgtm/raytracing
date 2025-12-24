@@ -1,6 +1,6 @@
 use crate::core::intersection::Intersection;
 use crate::core::math::{AABB, Vec2};
-use crate::material::Material;
+use crate::materials::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use std::sync::Arc;
@@ -185,11 +185,11 @@ impl Primitive for Rect {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
 
     #[test]
     fn test_xy_rect_intersection() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY rectangle at z=0, from (0,0) to (5,5)
         let rect = Rect::new(
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_rect_out_of_bounds() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY rectangle at z=0, from (0,0) to (5,5)
         let rect = Rect::new(
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_xz_rect_intersection() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XZ rectangle at y=0, from (0,0) to (5,5)
         let rect = Rect::new(
@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn test_rect_surface_area() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         let rect = Rect::new(
             RectAxis::XY,

@@ -1,5 +1,5 @@
 use crate::core::math::Vec2;
-use crate::material::Material;
+use crate::materials::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use std::sync::Arc;
@@ -117,12 +117,12 @@ impl Intersection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
 
     #[test]
     fn test_front_face_detection() {
         let ray = Ray::new(Vec3::ZERO, Vec3::new(0.0, 0.0, 1.0));
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         let isect = Intersection::with_default_tangents(
             &ray,
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn test_back_face_detection() {
         let ray = Ray::new(Vec3::ZERO, Vec3::new(0.0, 0.0, 1.0));
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         let isect = Intersection::with_default_tangents(
             &ray,

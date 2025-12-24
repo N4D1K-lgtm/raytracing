@@ -1,7 +1,7 @@
 use crate::core::math::Transform;
 use crate::geometry::Primitive;
 use crate::lights::Light;
-use crate::material::Material;
+use crate::materials::material::Material;
 use std::sync::Arc;
 
 /// Unique identifier for scene nodes

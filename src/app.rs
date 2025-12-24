@@ -50,8 +50,8 @@ impl App {
         // Start looking slightly down toward the scene
         let camera_controller = CameraController::new(
             camera_position,
-            0.0,                         // yaw (looking forward along -Z)
-            -15.0_f64.to_radians(),      // pitch (looking slightly down)
+            0.0,                    // yaw (looking forward along -Z)
+            -15.0_f64.to_radians(), // pitch (looking slightly down)
         );
 
         let target_samples = 64;
@@ -73,44 +73,89 @@ impl App {
     }
 
     fn create_default_scene() -> Scene {
-        use crate::material::{Lambertian, Metal};
-        use crate::objects::Sphere;
+        use crate::core::math::Transform;
+        use crate::geometry::{Plane, Primitive, Sphere};
+        use crate::lights::{Light, PointLight};
+        use crate::materials::material::{DiffuseMaterial, Material, PbrMaterial};
         use crate::vec3::Vec3;
         use std::sync::Arc;
 
         let mut scene = Scene::new();
 
-        // Ground
-        let ground_material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
-        scene.add(Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
+        // Ground plane
+        let ground_material: Arc<dyn Material> =
+            Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
+
+        let ground: Arc<dyn Primitive> = Arc::new(Plane::new(
+            Vec3::new(0.0, 1.0, 0.0),  // Up normal
+            Vec3::new(0.0, -0.5, 0.0), // Position
+            ground_material.clone(),
+        ));
+
+        scene.add_geometry(
+            "Ground".to_string(),
+            ground,
             ground_material,
-        ));
+            Transform::identity(),
+        );
 
-        // Center sphere
-        let center_material = Arc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
-        scene.add(Sphere::new(
-            Vec3::new(0.0, 0.0, -1.0),
-            0.5,
+        // Center sphere (diffuse red)
+        let center_material: Arc<dyn Material> =
+            Arc::new(DiffuseMaterial::new(Vec3::new(0.7, 0.3, 0.3)));
+        let center_sphere: Arc<dyn Primitive> = Arc::new(Sphere::new(0.5, center_material.clone()));
+
+        scene.add_geometry(
+            "CenterSphere".to_string(),
+            center_sphere,
             center_material,
-        ));
+            Transform::translate(Vec3::new(0.0, 0.0, -4.0)),
+        );
 
-        // Left sphere (metal)
-        let left_material = Arc::new(Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3));
-        scene.add(Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
+        // Left sphere (polished metal - silver)
+        let left_material: Arc<dyn Material> = Arc::new(PbrMaterial::new(
+            Vec3::new(0.9, 0.9, 0.9), // Silver color
+            1.0,                       // Fully metallic
+            0.2,                       // Low roughness = polished
+        ));
+        let left_sphere: Arc<dyn Primitive> = Arc::new(Sphere::new(0.5, left_material.clone()));
+
+        scene.add_geometry(
+            "LeftSphere".to_string(),
+            left_sphere,
             left_material,
-        ));
+            Transform::translate(Vec3::new(-1.2, 0.0, -4.0)),
+        );
 
-        // Right sphere (metal)
-        let right_material = Arc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0));
-        scene.add(Sphere::new(
-            Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            right_material,
+        // Right sphere (rough gold)
+        let right_material: Arc<dyn Material> = Arc::new(PbrMaterial::new(
+            Vec3::new(1.0, 0.8, 0.3), // Gold color
+            1.0,                       // Fully metallic
+            0.5,                       // Higher roughness
         ));
+        let right_sphere: Arc<dyn Primitive> = Arc::new(Sphere::new(0.5, right_material.clone()));
+
+        scene.add_geometry(
+            "RightSphere".to_string(),
+            right_sphere,
+            right_material,
+            Transform::translate(Vec3::new(1.2, 0.0, -4.0)),
+        );
+
+        // Add lighting - key light from above
+        let key_light = Arc::new(PointLight::new(
+            Vec3::new(2.0, 3.0, -2.0),
+            Vec3::new(15.0, 15.0, 15.0), // Bright white
+        )) as Arc<dyn Light>;
+
+        scene.add_light("KeyLight".to_string(), key_light, Transform::identity());
+
+        // Fill light from opposite side
+        let fill_light = Arc::new(PointLight::new(
+            Vec3::new(-2.0, 1.5, -2.0),
+            Vec3::new(5.0, 5.0, 7.0), // Cooler fill
+        )) as Arc<dyn Light>;
+
+        scene.add_light("FillLight".to_string(), fill_light, Transform::identity());
 
         scene
     }
@@ -130,7 +175,8 @@ impl App {
     }
 
     pub fn process_mouse_motion(&mut self, delta_x: f64, delta_y: f64) {
-        self.camera_controller.process_mouse_motion(delta_x, delta_y);
+        self.camera_controller
+            .process_mouse_motion(delta_x, delta_y);
         self.camera_dirty = true;
     }
 
@@ -168,8 +214,9 @@ impl App {
     }
 
     pub fn add_random_sphere(&mut self) {
-        use crate::material::{Lambertian, Metal};
-        use crate::objects::Sphere;
+        use crate::core::math::Transform;
+        use crate::geometry::{Primitive, Sphere};
+        use crate::materials::material::{DiffuseMaterial, Material, PbrMaterial};
         use rand::Rng;
         use std::sync::Arc;
 
@@ -177,24 +224,35 @@ impl App {
         let center = Vec3::new(
             rng.random_range(-3.0..3.0),
             rng.random_range(0.2..1.0),
-            rng.random_range(-3.0..0.0),
+            rng.random_range(-6.0..-2.0),
         );
         let radius = rng.random_range(0.1..0.5);
 
-        let material: Arc<dyn crate::material::Material> = if rng.random::<f64>() < 0.5 {
-            Arc::new(Lambertian::new(Vec3::new(
+        let material: Arc<dyn Material> = if rng.random::<f64>() < 0.5 {
+            // Diffuse material
+            Arc::new(DiffuseMaterial::new(Vec3::new(
                 rng.random(),
                 rng.random(),
                 rng.random(),
             )))
         } else {
-            Arc::new(Metal::new(
+            // Metallic material with random roughness
+            Arc::new(PbrMaterial::new(
                 Vec3::new(rng.random(), rng.random(), rng.random()),
-                rng.random_range(0.0..1.0),
+                1.0, // Fully metallic
+                rng.random_range(0.1..0.8),
             ))
         };
 
-        self.scene.add(Sphere::new(center, radius, material));
+        let sphere: Arc<dyn Primitive> = Arc::new(Sphere::new(radius, material.clone()));
+
+        self.scene.add_geometry(
+            format!("RandomSphere_{}", rand::rng().random::<u32>()),
+            sphere,
+            material,
+            Transform::translate(center),
+        );
+
         self.scene.build_bvh();
         self.accumulator.reset();
         self.camera_dirty = true;

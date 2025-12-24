@@ -1,6 +1,6 @@
 use super::NodeId;
 use crate::core::math::Transform;
-use crate::material::Material;
+use crate::materials::material::Material;
 use std::sync::Arc;
 
 /// Instance data for scene nodes

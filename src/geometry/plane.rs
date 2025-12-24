@@ -1,6 +1,6 @@
 use crate::core::intersection::Intersection;
 use crate::core::math::{AABB, Vec2};
-use crate::material::Material;
+use crate::materials::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use std::sync::Arc;
@@ -120,11 +120,11 @@ impl Primitive for Plane {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
 
     #[test]
     fn test_plane_intersection() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
         let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_plane_parallel_ray() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
         let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_plane_normal_facing() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // XY plane at z=0
         let plane = Plane::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), material);

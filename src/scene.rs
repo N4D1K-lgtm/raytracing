@@ -1,12 +1,12 @@
 use crate::{
-    aabb::AABB,
     acceleration::BvhNode,
-    bvh::BvhNode as OldBvhNode,
-    core::{intersection::Intersection, math::Transform},
+    core::{
+        intersection::Intersection,
+        math::{AABB, Transform},
+    },
     geometry::{Primitive, TransformedPrimitive},
-    hit::{HitRecord, Hittable},
     lights::Light,
-    material::Material,
+    materials::material::Material,
     ray::Ray,
     scene_graph::{NodeContent, NodeId, SceneNode},
 };
@@ -28,11 +28,6 @@ pub struct Scene {
 
     // Dirty flag - true if scene graph changed and BVH needs rebuild
     dirty: bool,
-
-    // Legacy support for old Hittable-based API
-    legacy_staging: Vec<Box<dyn Hittable>>,
-    legacy_bvh: Option<OldBvhNode>,
-    legacy_object_count: usize,
 }
 
 impl Scene {
@@ -44,9 +39,6 @@ impl Scene {
             bvh: None,
             lights: Vec::new(),
             dirty: false,
-            legacy_staging: Vec::new(),
-            legacy_bvh: None,
-            legacy_object_count: 0,
         }
     }
 
@@ -99,12 +91,7 @@ impl Scene {
     }
 
     /// Create and add an instance node
-    pub fn add_instance(
-        &mut self,
-        name: String,
-        template: NodeId,
-        transform: Transform,
-    ) -> NodeId {
+    pub fn add_instance(&mut self, name: String, template: NodeId, transform: Transform) -> NodeId {
         let id = NodeId(self.next_id);
         self.next_id += 1;
 
@@ -181,10 +168,8 @@ impl Scene {
                 NodeContent::Geometry { primitive, .. } => {
                     // Apply world transform to primitive
                     if let Some(world_transform) = node.world_transform() {
-                        let transformed = TransformedPrimitive::new(
-                            primitive.clone(),
-                            world_transform.clone(),
-                        );
+                        let transformed =
+                            TransformedPrimitive::new(primitive.clone(), world_transform.clone());
                         primitives.push(Arc::new(transformed));
                     } else {
                         // No transform - use primitive directly
@@ -195,10 +180,17 @@ impl Scene {
                     // TODO: Apply transform to light
                     self.lights.push(light.clone());
                 }
-                NodeContent::Instance { template, override_material } => {
+                NodeContent::Instance {
+                    template,
+                    override_material,
+                } => {
                     // Resolve instance: get template geometry and apply instance transform
                     if let Some(template_node) = self.nodes.get(template) {
-                        if let NodeContent::Geometry { primitive, material } = &template_node.content {
+                        if let NodeContent::Geometry {
+                            primitive,
+                            material,
+                        } = &template_node.content
+                        {
                             let instance_material = override_material.as_ref().unwrap_or(material);
 
                             // Combine template's world transform with instance's world transform
@@ -266,16 +258,7 @@ impl Scene {
         self.dirty
     }
 
-    // ========== Legacy Hittable API (for backward compatibility) ==========
-
-    /// Add object using old Hittable API
-    pub fn add(&mut self, object: impl Hittable + 'static) {
-        self.legacy_staging.push(Box::new(object));
-        self.legacy_object_count += 1;
-        self.legacy_bvh = None;
-    }
-
-    /// Clear all objects (both new and legacy)
+    /// Clear all objects
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.root_nodes.clear();
@@ -283,34 +266,11 @@ impl Scene {
         self.bvh = None;
         self.lights.clear();
         self.dirty = false;
-
-        self.legacy_staging.clear();
-        self.legacy_bvh = None;
-        self.legacy_object_count = 0;
-    }
-
-    /// Get object count (legacy objects only)
-    pub fn len(&self) -> usize {
-        self.legacy_object_count
     }
 
     /// Check if scene is empty
     pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty() && self.legacy_object_count == 0
-    }
-
-    /// Build legacy BVH from staged objects
-    fn build_legacy_bvh(&mut self) {
-        if self.legacy_staging.is_empty() {
-            return;
-        }
-
-        if self.legacy_staging.len() == 1 {
-            return; // No need for BVH with single object
-        }
-
-        let objects = std::mem::take(&mut self.legacy_staging);
-        self.legacy_bvh = Some(OldBvhNode::new(objects));
+        self.nodes.is_empty()
     }
 }
 
@@ -320,60 +280,11 @@ impl Default for Scene {
     }
 }
 
-// Implement Hittable for backward compatibility
-impl Hittable for Scene {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        // Try legacy BVH first
-        if let Some(bvh) = &self.legacy_bvh {
-            return bvh.hit(ray, t_min, t_max);
-        }
-
-        // Fall back to linear search through legacy staging
-        let mut closest_so_far = t_max;
-        let mut hit_record = None;
-
-        for object in &self.legacy_staging {
-            if let Some(hit) = object.hit(ray, t_min, closest_so_far) {
-                closest_so_far = hit.t;
-                hit_record = Some(hit);
-            }
-        }
-
-        hit_record
-    }
-
-    fn bounding_box(&self) -> Option<AABB> {
-        if let Some(bvh) = &self.legacy_bvh {
-            return bvh.bounding_box();
-        }
-
-        if self.legacy_staging.is_empty() {
-            return None;
-        }
-
-        let mut output_box: Option<AABB> = None;
-
-        for object in &self.legacy_staging {
-            if let Some(bbox) = object.bounding_box() {
-                output_box = Some(if let Some(ob) = output_box {
-                    AABB::surrounding_box(ob, bbox)
-                } else {
-                    bbox
-                });
-            } else {
-                return None;
-            }
-        }
-
-        output_box
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::geometry::Sphere;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
     use crate::vec3::Vec3;
 
     #[test]
@@ -386,7 +297,7 @@ mod tests {
     #[test]
     fn test_add_geometry_node() {
         let mut scene = Scene::new();
-        let material: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let primitive: Arc<dyn Primitive> = Arc::new(Sphere::new(1.0, material.clone()));
 
         let node_id = scene.add_geometry(
@@ -404,7 +315,7 @@ mod tests {
     #[test]
     fn test_scene_graph_hierarchy() {
         let mut scene = Scene::new();
-        let material: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let primitive: Arc<dyn Primitive> = Arc::new(Sphere::new(1.0, material.clone()));
 
         // Create parent node
@@ -436,7 +347,7 @@ mod tests {
     #[test]
     fn test_build_bvh() {
         let mut scene = Scene::new();
-        let material: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let primitive: Arc<dyn Primitive> = Arc::new(Sphere::new(1.0, material.clone()));
 
         scene.add_geometry(
@@ -462,7 +373,7 @@ mod tests {
     #[test]
     fn test_intersect() {
         let mut scene = Scene::new();
-        let material: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let primitive: Arc<dyn Primitive> = Arc::new(Sphere::new(1.0, material.clone()));
 
         scene.add_geometry(

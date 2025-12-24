@@ -131,12 +131,12 @@ impl Light for AreaLight {
 mod tests {
     use super::*;
     use crate::geometry::{Rect, RectAxis};
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
 
     #[test]
     fn test_area_light_creation() {
-        let material: Arc<dyn crate::material::Material> =
-            Arc::new(Lambertian::new(Vec3::new(1.0, 1.0, 1.0)));
+        let material: Arc<dyn crate::materials::material::Material> =
+            Arc::new(DiffuseMaterial::new(Vec3::new(1.0, 1.0, 1.0)));
         let rect = Arc::new(Rect::new(
             RectAxis::XY,
             Vec2::new(0.0, 0.0),
@@ -152,8 +152,8 @@ mod tests {
 
     #[test]
     fn test_area_light_sampling() {
-        let material: Arc<dyn crate::material::Material> =
-            Arc::new(Lambertian::new(Vec3::new(1.0, 1.0, 1.0)));
+        let material: Arc<dyn crate::materials::material::Material> =
+            Arc::new(DiffuseMaterial::new(Vec3::new(1.0, 1.0, 1.0)));
         let rect = Arc::new(Rect::new(
             RectAxis::XY,
             Vec2::new(0.0, 0.0),
@@ -179,8 +179,8 @@ mod tests {
 
     #[test]
     fn test_area_light_two_sided() {
-        let material: Arc<dyn crate::material::Material> =
-            Arc::new(Lambertian::new(Vec3::new(1.0, 1.0, 1.0)));
+        let material: Arc<dyn crate::materials::material::Material> =
+            Arc::new(DiffuseMaterial::new(Vec3::new(1.0, 1.0, 1.0)));
         let rect = Arc::new(Rect::new(
             RectAxis::XY,
             Vec2::new(0.0, 0.0),

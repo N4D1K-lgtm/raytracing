@@ -129,12 +129,12 @@ pub fn build_bvh(primitives: &[Arc<dyn Primitive>]) -> Option<BvhNode> {
 mod tests {
     use super::*;
     use crate::geometry::Sphere;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
     use crate::vec3::Vec3;
 
     #[test]
     fn test_bvh_single_primitive() {
-        let material: Arc<dyn crate::material::Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn crate::materials::material::Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let sphere = Arc::new(Sphere::new(1.0, material)) as Arc<dyn Primitive>;
 
         let bvh = BvhNode::build(vec![sphere]).unwrap();
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_bvh_multiple_primitives() {
-        let material: Arc<dyn crate::material::Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn crate::materials::material::Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         let spheres: Vec<Arc<dyn Primitive>> = vec![
             Arc::new(Sphere::new(1.0, Arc::clone(&material))),
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_bvh_intersection() {
-        let material: Arc<dyn crate::material::Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material: Arc<dyn crate::materials::material::Material> = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
 
         // Create multiple spheres at different positions using TransformedPrimitive
         use crate::core::math::Transform;

@@ -1,6 +1,6 @@
 use crate::core::intersection::Intersection;
 use crate::core::math::{AABB, Vec2};
-use crate::material::Material;
+use crate::materials::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use std::f64::consts::PI;
@@ -144,11 +144,11 @@ impl Primitive for Sphere {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::Lambertian;
+    use crate::materials::material::DiffuseMaterial;
 
     #[test]
     fn test_sphere_intersection() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let sphere = Sphere::new(1.0, material);
 
         // Ray pointing at sphere from distance
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_sphere_bounds() {
-        let material = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+        let material = Arc::new(DiffuseMaterial::new(Vec3::new(0.5, 0.5, 0.5)));
         let sphere = Sphere::new(2.0, material);
         let bounds = sphere.world_bounds();
 
